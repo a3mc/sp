@@ -12,6 +12,7 @@ export const ddos = ( threads: string, host: string, amount: string) => {
     // Spawn main process
     let totalRequests = 0;
     let errorsCount: number[] = [0];
+    let totalCount: number[] = [0];
 
     const consoleScreen = blessed.screen();
     consoleScreen.key( ['escape', 'q', 'C-c'], () => {
@@ -63,6 +64,12 @@ export const ddos = ( threads: string, host: string, amount: string) => {
         y: [0]
     }
 
+    let totalData = {
+        title: 'Packets per second',
+        x: ['0'],
+        y: [0]
+    }
+
     consoleScreen.render();
 
 
@@ -90,7 +97,7 @@ Worker ${ worker.process.pid } died. Before the death he said ${ signal }.` )
             );
             // FIXME - handle message
             //console.log( 'Starting new worker.' );
-            //cluster.fork();
+            cluster.fork();
         }
     );
 
@@ -106,8 +113,8 @@ Worker ${ worker.process.pid } died. Before the death he said ${ signal }.` )
     }
 
     const messageHandler = ( message: any ) => {
-        if ( message.total && message.errors ) {
-            errorsCount.push( Math.round( Number( message.total ) / Number( message.errors ) ) );
+        if ( message ) {
+            errorsCount.push( Number( message.errors ) );
             //setBox1();
             errorsCount = errorsCount.splice( - 50 )
             let x = [];
@@ -119,7 +126,24 @@ Worker ${ worker.process.pid } died. Before the death he said ${ signal }.` )
                 x: [x.join(' ')],
                 y: [...errorsCount]
             }
-            setLineData([errorsData], errorsLine)
+            errorsLine.setData([errorsData])
+            totalRequests += Number(message.total);
+
+            totalCount.push(Number(message.total))
+            x = [];
+            for ( let i = 0; i < 50; i ++ ) {
+                x.push(i);
+            }
+            totalData = {
+                title: totalRequests.toString(),
+                x: [x.join(' ')],
+                y: [...totalCount]
+            }
+
+
+            transactionsLine.setData([totalData])
+
+
             consoleScreen.render();
         }
     }
