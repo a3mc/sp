@@ -1,27 +1,20 @@
 {
-    "name": "umee_console",
+    "name": "umee_sender",
     "version": "0.0.1",
-    "description": "UMEE Validator Dashboard",
+    "description": "UMEE test sender",
     "main": "dist/index.js",
     "scripts": {
         "test": "test",
         "build": "tsc",
         "build:watch": "tsc --watch",
-        "start": "tsc && node dist/index.js"
+        "start": "tsc && NODE_ENV=production node dist/index.js"
     },
     "author": "ART3MIS.CLOUD",
     "license": "MIT",
     "dependencies": {
-        "axios": "^0.23.0",
-        "blessed": "^0.1.81",
-        "blessed-contrib": "^4.10.1",
-        "cfonts": "^2.10.0",
-        "cluster": "^0.7.7",
-        "colorette": "^2.0.16",
-        "node-fetch": "^3.0.0"
+        "cluster": "^0.7.7"
     },
     "devDependencies": {
-        "@types/blessed": "^0.1.19",
         "@types/node": "^14.17.21",
         "tslib": "^2.3.1",
         "typescript": "^4.4.3"
