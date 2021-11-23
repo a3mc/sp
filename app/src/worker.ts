@@ -14,9 +14,7 @@ const worker = () => {
         console.log('worker recieved', data);
         commands = data.commands;
         started = true;
-        if ( commands.length ) {
-            request();
-        }
+        request();
     });
 
     process.on('exit', ( data ) => {
@@ -26,10 +24,15 @@ const worker = () => {
 
 
     const request = async () => {
+        if ( !commands.length ) {
+            console.log( 'Worker finished' );
+            process.exit(1 );
+            return
+        }
         const command = commands.pop();
         console.log( 'Exec command:', command);
         requests++;
-        exec( command, ( err: any, stdout: any, stderr: any ) => {
+        exec( 'cat ' + command, ( err: any, stdout: any, stderr: any ) => {
             if( err ) {
                 errors ++;
                 //some err occurred
