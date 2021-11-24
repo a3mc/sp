@@ -5,4 +5,4 @@ import { cpus } from 'os';
 const numCPUs = cpus().length;
 
 
-ddos( '4' );
+ddos( '32' );

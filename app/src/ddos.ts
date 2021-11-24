@@ -6,9 +6,9 @@ const readline = require('readline');
 
 const numCPUs = cpus().length;
 
-let allCommands: string[] = [];
+let allCommands: number[] = [];
 
-const totalFiles = 6;
+const totalFiles = 400;
 
 // async function processLineByLine() {
 //     const fileStream = fs.createReadStream('input.txt');
@@ -42,8 +42,8 @@ export const ddos = async ( threads: string ) => {
 
     console.log( 'Processing', totalFiles)
 
-    for ( let i = 1; i <= totalFiles; i++ ){
-        allCommands.push( './data_files/file' + i + '.txt');
+    for ( let i = 0; i < totalFiles; i++ ){
+        allCommands.push( i );
     }
 
     if ( allCommands.length < Number( threads) ) {
@@ -51,7 +51,7 @@ export const ddos = async ( threads: string ) => {
         threads = String( allCommands.length );
     }
 
-    let commands: string[][] = [];
+    let commands: number[][] = [];
 
 
 
@@ -86,7 +86,7 @@ export const ddos = async ( threads: string ) => {
     //         );
     //         // FIXME - handle message
     //         //console.log( 'Starting new worker.' );
-    //         cluster.fork();
+    //         //cluster.fork();
     //     }
     // );
 

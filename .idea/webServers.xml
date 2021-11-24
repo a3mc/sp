@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="875a506d-6327-4ca9-beeb-e5aa0ee4e8e0" name="umee-rpc">
+        <fileTransfer accessType="SFTP" host="185.130.224.232" port="55055" sshConfigId="c71f1c22-5fd6-4673-a42f-98084dff309a" sshConfig="umee_rpc@185.130.224.232:55055 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
