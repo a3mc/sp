@@ -41,7 +41,7 @@ const worker = () => {
     --note "ART3MIS.CLOUD" \
     --gas-prices "0.00001uumee" \
     --broadcast-mode async \
-    --timeout-height 1000000 \
+    --timeout-height 2000000 \
     -y`, {
             maxBuffer: 1024 * 1024 * 16,
             timeout: 0
