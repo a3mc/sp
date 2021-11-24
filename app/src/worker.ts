@@ -57,7 +57,10 @@ const worker = () => {
                 // }
 
             } else {
-                fs.appendFileSync('log.txt', stdout);
+                try {
+                    fs.appendFileSync('log.txt', stdout);
+                } catch ( e ){}
+
             }
 
             if ( command ) {
