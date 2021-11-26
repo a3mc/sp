@@ -10,26 +10,6 @@ let allCommands: number[] = [];
 
 const totalFiles = 400;
 
-// async function processLineByLine() {
-//     const fileStream = fs.createReadStream('input.txt');
-//
-//     const rl = readline.createInterface({
-//         input: fileStream,
-//         crlfDelay: Infinity
-//     });
-//     // Note: we use the crlfDelay option to recognize all instances of CR LF
-//     // ('\r\n') in input.txt as a single line break.
-//
-//     for await (const line of rl) {
-//         // Each line in input.txt will be successively available here as `line`.
-//         //console.log(`Line from file: ${line}`);
-//         if ( line.length ) {
-//             allCommands.push( line )
-//         }
-//
-//     }
-// }
-
 export const ddos = async ( threads: string ) => {
     // Spawn main process
     let totalRequests = 0;
@@ -77,19 +57,6 @@ export const ddos = async ( threads: string ) => {
         threadsCount++;
     }
 
-    // cluster.on(
-    //     'exit',
-    //     ( worker, code, signal ) => {
-    //         void code !== 0 &&
-    //         console.log(
-    //             `Worker ${ worker.process.pid } exited.`
-    //         );
-    //         // FIXME - handle message
-    //         //console.log( 'Starting new worker.' );
-    //         //cluster.fork();
-    //     }
-    // );
-
     const messageHandler = ( message: any ) => {
         if( message && ( message.total !== undefined || message.errors !== undefined ) ) {
             totalCount += message.total;
@@ -105,5 +72,3 @@ export const ddos = async ( threads: string ) => {
         cluster.workers[id]?.on( 'message', messageHandler );
     }
 }
-
-
