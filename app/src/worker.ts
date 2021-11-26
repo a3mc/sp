@@ -1,64 +1,82 @@
-import axios from 'axios';
 import process from 'process';
-const { exec } = require('child_process');
+import * as fs from 'fs';
+const { exec } = require( 'child_process' );
+let errors = 0;
 
-let errors = 0,
-    success = 0,
-    errorMessages: any[] = []
 
-const worker = ( host: string, amount: string ) => {
+const worker = () => {
     // Send requests with interval
 
+    let commands: number[] = [];
+    let started = false;
     let requests = 0;
-    let totalRequests = 0;
 
-   setInterval( () => {
-       if ( requests < Number( amount ) ) {
-           requests ++;
-           totalRequests ++;
-           request();
-       }
-   }, 10 );
+    process.on('message', ( data ) => {
+        if ( data.commands ) {
+            console.log( 'worker recieved', data );
+            commands = data.commands;
+            started = true;
+            request();
+        }
+    });
 
-    setInterval( () => {
-
-
-
+    process.on('exit', ( data ) => {
         // @ts-ignore
-        //process.send({ total: totalRequests, errors: errors });
-        //totalRequests = 0;
+        process.send( { total: requests, errors: errors } );
+    });
 
-        //console.log( process.pid + `: Requests: ${ blue( totalRequests ) } Errors: ${ red( errors ) } Current: ${ requests }`)
-    }, 1000 );
 
     const request = async () => {
-
-
-        exec('cat peer-ack.pcap > /dev/tcp/135.181.16.249/26656', (err: any, stdout:any, stderr:any) => {
-            if (err) {
+        if ( commands && !commands.length ) {
+            console.log( 'Worker finished' );
+            process.exit(1 );
+            return;
+        }
+        const command = commands.shift();
+        //console.log( 'Exec on key:', command);
+        requests++;
+        exec( `umeed tx bank send "key.${command}" "umee17t97n5emfkr976d3jwxk4dj99j672j60m0y8na" "1uumee" \
+    --chain-id "umeevengers-1c" \
+    --keyring-backend test \
+    --note "ART3MIS.CLOUD" \
+    --gas-prices "0.00001uumee" \
+    --broadcast-mode async \
+    --timeout-height 2000000 \
+    -y`, {
+            maxBuffer: 1024 * 1024 * 16,
+            timeout: 0
+        }, ( err: any, stdout: any, stderr: any ) => {
+            if( err ) {
+                errors ++;
                 //some err occurred
-                console.error(err)
-            } else {
-                // the *entire* stdout and stderr (buffered)
-                console.log(`stdout: ${stdout}`);
-                console.log(`stderr: ${stderr}`);
-            }
-        });
+                //console.log( err )
+                //console.log( stderr )
+                // Repeat even on errors
+                // if ( command ) {
+                //     commands.push( command );
+                // }
 
-        // let isFailedRequest = false
-        // const response = await axios.get(
-        //     host
-        // ).catch( ( err: any ) => {
-        //     if( err ) {
-        //         isFailedRequest = true
-        //         errors++
-        //     }
-        // } );
-        // if( response ) {
-        //     isFailedRequest = false
-        // }
-        // requests --;
+            } else {
+                try {
+                    fs.appendFileSync('log.txt', stdout);
+                } catch ( e ){}
+
+            }
+
+            if ( command ) {
+                commands.push( command );
+            }
+
+
+            if ( commands && commands.length ) {
+                request();
+            } else {
+                console.log( 'Worker finished' );
+                process.exit(1 );
+            }
+        } );
+
     }
 }
 
-worker( process.argv[2], process.argv[3] )
+worker();

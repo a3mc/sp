@@ -1,131 +1,108 @@
 import cluster from 'cluster'
-import { red } from 'colorette'
 import { cpus } from 'os';
 import process from 'process';
-import blessed, { colors } from 'blessed';
-import contrib from 'blessed-contrib';
-
+const fs = require('fs');
+const readline = require('readline');
 
 const numCPUs = cpus().length;
 
-export const ddos = ( threads: string, host: string, amount: string) => {
+let allCommands: number[] = [];
+
+const totalFiles = 400;
+
+// async function processLineByLine() {
+//     const fileStream = fs.createReadStream('input.txt');
+//
+//     const rl = readline.createInterface({
+//         input: fileStream,
+//         crlfDelay: Infinity
+//     });
+//     // Note: we use the crlfDelay option to recognize all instances of CR LF
+//     // ('\r\n') in input.txt as a single line break.
+//
+//     for await (const line of rl) {
+//         // Each line in input.txt will be successively available here as `line`.
+//         //console.log(`Line from file: ${line}`);
+//         if ( line.length ) {
+//             allCommands.push( line )
+//         }
+//
+//     }
+// }
+
+export const ddos = async ( threads: string ) => {
     // Spawn main process
     let totalRequests = 0;
-    let errorsCount: number[] = [0];
+    let errorsCount = 0;
+    let totalCount = 0;
 
-    const consoleScreen = blessed.screen();
-    consoleScreen.key( ['escape', 'q', 'C-c'], () => {
-        return process.exit( 0 );
-    } );
 
-    const grid = new contrib.grid( { top: 30, rows: 12, cols: 12, screen: consoleScreen } );
+    console.log( 'Available cpus', numCPUs );
+    console.log( 'Launched threads', threads )
 
-    const box1 = grid.set(
-        0, 0, 3, 3, blessed.list,
-        {
-            label: ' Setup ',
-            tags: true,
-            items: [
-                '',
-                '{gray-fg}URL:{/} {yellow-fg}{bold}{underline}' + host + '{/}',
-                '{gray-fg}Total requests:{/} {green-fg}{bold} ' + totalRequests + ' {/}',
-                '{gray-fg}Error responses:{/} {red-fg} '+ errorsCount+' {/}',
-                '{gray-fg}Workers:{/} {blue-fg}{bold}' + threads + '{/}',
-                '{gray-fg}Requests per worker:{/} {bold}' + amount + '{/}',
-                '{gray-fg}Threads available:{/} {bold}' + numCPUs + '{/}'
-            ]
-        }
-    );
+    console.log( 'Processing', totalFiles)
 
-    const errorsLine = grid.set(0, 6, 6, 6, contrib.line,
-        { style:
-                { line: "red"
-                    , text: "white"
-                    , baseline: "black"}
-            , label: 'Errors Rate %'
-            , maxY: 60
-            , showLegend: true })
-
-    const transactionsLine = grid.set(6, 6, 6, 6, contrib.line,
-        { showNthLabel: 5
-            , maxY: 100
-            , label: 'Total Transactions'
-            , showLegend: true
-            , legend: {width: 10}})
-
-    // const setBox1 = () => {
-    //     box1.list.setContent( 'test');
-    // }
-
-    let errorsData = {
-        title: 'Errors rate %',
-        x: ['0'],
-        y: [0]
+    for ( let i = 0; i < totalFiles; i++ ){
+        allCommands.push( i );
     }
 
-    consoleScreen.render();
+    if ( allCommands.length < Number( threads) ) {
+        console.log( 'Commands size is less than threads. Limiting threads to', allCommands.length );
+        threads = String( allCommands.length );
+    }
 
+    let commands: number[][] = [];
+
+
+
+    console.log( 'Commands size:', allCommands.length );
+    console.log( 'Chunk size:', Math.round( allCommands.length / Number( threads ) ) );
+
+
+    let i, j, chunk = Math.round( allCommands.length / Number( threads ) );
+    for ( i = 0, j = allCommands.length; i < j; i += chunk ) {
+        commands.push( allCommands.slice( i, i + chunk ) );
+    }
 
     cluster.setupMaster( {
-        exec: `${ process.cwd() }/dist/worker.js`,
-        args: [host, amount]
+        exec: `${ process.cwd() }/dist/worker.js`
     } )
 
     // Count threads
-    let threadsCount = 0
+    let threadsCount = 0;
 
     for ( let i = 0; i < Number( threads ); i++ ) {
-        cluster.fork()
-
-        threadsCount++
+        const worker = cluster.fork();
+        worker.send( { commands: commands[i] } );
+        threadsCount++;
     }
 
-    cluster.on(
-        'exit',
-        ( worker, code, signal ) => {
-            void code !== 0 &&
-            console.log(
-                red( `
-Worker ${ worker.process.pid } died. Before the death he said ${ signal }.` )
-            );
-            // FIXME - handle message
-            //console.log( 'Starting new worker.' );
-            //cluster.fork();
-        }
-    );
-
-    function setLineData( mockData:any , line: any ) {
-        // for (let i=0; i<mockData.length; i++) {
-        //     const last = mockData[i].y[mockData[i].y.length-1]
-        //     mockData[i].y.shift()
-        //     const num = Math.max(last + Math.round(Math.random()*10) - 5, 10)
-        //     mockData[i].y.push(num)
-        // }
-
-        line.setData(mockData)
-    }
+    // cluster.on(
+    //     'exit',
+    //     ( worker, code, signal ) => {
+    //         void code !== 0 &&
+    //         console.log(
+    //             `Worker ${ worker.process.pid } exited.`
+    //         );
+    //         // FIXME - handle message
+    //         //console.log( 'Starting new worker.' );
+    //         //cluster.fork();
+    //     }
+    // );
 
     const messageHandler = ( message: any ) => {
-        if ( message.total && message.errors ) {
-            errorsCount.push( Math.round( Number( message.total ) / Number( message.errors ) ) );
-            //setBox1();
-            errorsCount = errorsCount.splice( - 50 )
-            let x = [];
-            for ( let i = 0; i < 50; i ++ ) {
-                x.push(i);
-            }
-            errorsData = {
-                title: 'Error responses',
-                x: [x.join(' ')],
-                y: [...errorsCount]
-            }
-            setLineData([errorsData], errorsLine)
-            consoleScreen.render();
+        if( message && ( message.total !== undefined || message.errors !== undefined ) ) {
+            totalCount += message.total;
+            errorsCount += message.errors;
+            console.log( 'Total sent:', totalCount, 'Total errors:', errorsCount )
+        } else {
+            console.log( 'Message from worker:', message )
+            console.log( 'Sent:', totalCount, 'Errors:', errorsCount )
         }
     }
 
     for ( const id in cluster.workers ) {
-        cluster.workers[id]?.on('message', messageHandler);
+        cluster.workers[id]?.on( 'message', messageHandler );
     }
 }
 
